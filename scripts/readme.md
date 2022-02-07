@@ -1,0 +1,9 @@
+# EC2 Instance Interaction Scripts
+**bash scripts to initiate ssh connections to Ubuntu Server EC2 instances, and transfer files to/from instances**
+
+## Contents:
+1. **connectToEC2.sh:** Establishes an ssh connection to a specified instance. Accepts the public IP address/IPv4 DNS as input. Run the script with -h for details. Requires a valid rsa key pair issued to your ec2 account (*.pem file), which should be inserted in this script.
+2. **downloadFromEC2.sh:** Downloads a file from an instance using scp, accepts the filepath on instance to download, the destination folder of the saved file, and the public IP address/IPv4 DNS of the instance. Run the script with -h for details. Requires a valid rsa key pair issued to your ec2 account (*.pem file), which should be inserted in this script.
+3. **setLocalEnv.sh:** Initializes a shell environment on your local machine that makes environment variables available for ease of access such as instance IP addresses, instance IPv4 DNS, and URLs for monitoring consoles available. The environment variables in this script should be initialized after renting EC2 instances that are to be part of your cluster, and then a shell containing these variables can be initialized by running this script with `source setLocalEnv.sh`.
+4. **transferFileToEC2.sh:** Transfers a file from local machine to an instance using scp, accepting the filepath of the file to transfer, the destination folder of file on the instance, and the public IP address/IPv4 DNS of the instance. Run the script with -h for details. Requires a valid rsa key pair issued to your ec2 account (*.pem file), which should be inserted in this script.
+5. **placeholder.pem:** A placeholder .pem file which is invalid. This must be replaced with a key pair issued to your account.

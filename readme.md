@@ -1,0 +1,28 @@
+# EC2 PySpark Cluster Setup Utilities
+
+**A package to install Spark 3.1, Hadoop 2.7, and Anaconda3-5.3.1 on Ubuntu Server 20.04 LTS, and initalize a Spark Cluster with the Hadoop Distributed Filesystem (HDFS) from rented Amazon Elastic Compute Cloud (EC2) instances. This package sets up a Spark cluster using the Spark standalone cluster manager, and configures the cluster for PySpark programming**
+
+Basic knowledge of EC2, Spark, Hadoop, Linux, and Anaconda is required. This repo instructs the user how to create a cluster setup package, send it to EC2 instances, and initialize a cluster for PySpark programming with the HDFS as storage. The tools in this repo used to create the setup package are for Linux only (tested on Ubuntu 20.04), and would have to be adapted to accommodate other operating systems.
+
+## Contents:
+- **scripts:** A set of bash scripts to initiate ssh connections to EC2 instances, and transfer files to/from instances.
+- **spark_3p1_init:** EC2 instance setup package template. To be completed by the user to include the IP addresses of the instances they have rented and want to include in their cluster. Once complete, this folder can then be compressed and sent to each instance in the cluster, where the setup script within this package can then be used to initalize each node.
+
+## Instructions:
+Before beginning, an AWS account and EC2 rsa keypair is required to rent and connect to EC2 instances. A EC2 security group is also required that allows your IP address access the instances. At minimum, the security group must allow your IP address SSH access on port 22, and should also allow all TCP connections originating from your IP address, and all TCP connections originating from within the security group. These TCP connections allow the nodes to communicate, and allow you to check on each node's status through the internet.
+
+1. Rent the desired instances from EC2 within the same availability zone and security group.
+2. Record the public IPv4 DNS and private IPV4 address of each instance. Insert the public IPv4 DNS of each instance in the script `scripts/setLocalEnv.sh`. Also insert the private IPv4 DNS of the Master Node in `scripts/setLocalEnv.sh`.
+3. Record the private IP address and alias of each node (master, worker1, worker2, ...) in the `spark_3p1_init/hdfs_config/hosts` file. This completes the setup package to be used on each node.
+4. Run the `spark_3p1_init/package_setup.sh` script to compress the setup package into a single file, ready for transfer to each instance. The default location of the package is *scripts/data*, which will be created automatically.
+5. Connect to each instance: Launch a terminal in the scripts folder, and run `source setLocalEnv.sh` to set environment variables required to establish connection to your instances (Public IPv4 DNS). Then run the *connectToEC2.sh* script, passing in the IPv4 DNS of the instance to connect to as the only parameter (example: `bash connectToEC2.sh $MASTER_DNS`). This will establish an ssh connection to the instance, resulting in a shell in that instance. Repeat this for each instance.
+6. Transfer the setup package to each instance: Using another terminal in the scripts folder, run `source setLocalEnv.sh` to set environment variables, then use the *transferFileToEC2.sh* script to transfer the setup package located in *scripts/data* to /home/ubuntu/ on each instance individually. Run `bash transferFileToEC2.sh -h` for details on using the script.
+7. Decompress the setup package located in /home/ubuntu (~) using the shells established in step 5.
+8. Run the command `source setup.sh` on each instance to initiate setup. The script should be run with source (run in the current shell and not a child process of the shell, retaining environment variables). After all packages are downloaded and installed (approximately 5-10 minutes), the script will prompt the user to choose whether the node is to be MASTER or WORKER and will pause until this is entered.
+9. In the Master Node instance shell, enter "MASTER", while waiting to enter any information for the Worker Nodes.
+10. Next enter the Spark Master Node URL, which is used by Worker Nodes to communicate with the Master Node on their private network. This can be found in the MASTER_URL environment variable set by *setLocalEnv.sh* from a local shell.
+11. Wait for the Master Node to finish setup. Once complete, the Spark and Hadoop Master Node daemons have been launched. The Master Node must complete setup before launching the Worker daemons, hence the pause in step 9.
+12. Now enter the prompted information for each Worker Node ("WORKER", $MASTER_URL) and allow the Worker Nodes to finish setup. At the end of each Worker Node Setup, a passwordless ssh keygen is run, requiring the user to press enter 3 times when prompted (default settings, no password). After the keygen, allow the ssh connection by typing 'yes', and the setup will complete.
+13. Check the Spark and Hadoop configurations by vising their Master Node consoles. These URLs can be found in the MASTER_CONSOLE_URL and NAMENODE_CONSOLE_URL environment variables set by *setLocalEnv.sh* from a local shell. A test PySpark application can also be run using the script testCluster.sh located at */home/ubuntu/Utilities/testCluster.sh*, run from the Master node only. The record of this application being run can also be seen in the Spark Cluster Manager Console.
+
+See the readme's in the scripts folder and spark_3p1_init folder for more details.

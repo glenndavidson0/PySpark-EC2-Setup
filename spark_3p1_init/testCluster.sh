@@ -1,0 +1,1 @@
+spark-submit --master $MASTER_URL /opt/spark/examples/src/main/python/pi.py
